@@ -1308,10 +1308,84 @@ function resetAll(){
   renderResults();
 }
 
+// ── SASUKE LAUNCH PRESET ──
+const SASUKE_INDUSTRY_TO_PRESET = {
+  '人材（派遣・紹介）':'人材派遣',
+  '人材（アウトソーサー）':'人材派遣',
+  '製造（食品）':'食品製造',
+  '製造（自動車）':'メーカー',
+  '製造（電子部品・半導体）':'メーカー',
+  '製造（化学・医薬）':'メーカー',
+  '製造（鉄鋼）':'メーカー',
+  '製造（その他）':'メーカー',
+  '物流（運輸・配送）':'物流',
+  '物流（倉庫）':'物流',
+  '物流（鉄道・航空）':'物流',
+  '介護・福祉・保育':'介護',
+  'サービス（飲食）':'飲食店',
+  'サービス（スーパー）':'小売店',
+  'サービス（小売）':'小売',
+  'サービス（アパレル・美容）':'美容',
+  'サービス（冠婚葬祭）':'イベント',
+  'サービス（給食・中食）':'食品製造',
+  'サービス（バス・タクシー）':'物流',
+  '警備':'警備',
+  'IT・通信・システム':'IT',
+  '建設・建築・土木':'建築',
+  '広告・メディア':'広告',
+  '商社・コンサル':'コンサル'
+};
+
+function normalizeSasukeIndustry(value){
+  try{
+    return String(value||'').normalize('NFKC').replace(/[\\s　]+/g,'').trim();
+  }catch(e){
+    return String(value||'').replace(/[\\s　]+/g,'').trim();
+  }
+}
+
+function findR360PresetForSasukeIndustry(industry){
+  const exact=SASUKE_INDUSTRY_TO_PRESET[industry];
+  if(exact)return exact;
+
+  const normalized=normalizeSasukeIndustry(industry);
+  for(const [source,preset] of Object.entries(SASUKE_INDUSTRY_TO_PRESET)){
+    if(normalizeSasukeIndustry(source)===normalized)return preset;
+  }
+  return '';
+}
+
+function applySasukeLaunchPreset(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('source')!=='sasuke')return;
+
+  const company=String(params.get('company')||'').trim();
+  const industry=String(params.get('industry')||'').trim();
+
+  if(company){
+    const companyInput=document.getElementById('global-company');
+    if(companyInput){
+      companyInput.value=company;
+      companyInput.dispatchEvent(new Event('input',{bubbles:true}));
+      companyInput.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+  }
+
+  const preset=findR360PresetForSasukeIndustry(industry);
+  if(preset&&IND[preset]){
+    const presetSelect=document.getElementById('presetSel');
+    if(presetSelect){
+      presetSelect.value=preset;
+      applyPreset();
+    }
+  }
+}
+
 // ── INIT ──
 buildSections();
 initSupp();
 renderResults();
+applySasukeLaunchPreset();
 
 // ============================================================
 //  PROMPT EXPORT MODAL
